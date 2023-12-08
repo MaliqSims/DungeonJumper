@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Jumping Game</title>
+    <style>
+      #game {
+        width: 400px;
+        height: 400px;
+        border: 1px solid #000;
+        position: relative;
+      }
+
+      #player {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: red;
+        position: absolute;
+        bottom: 0;
+      }
+
+      .platform {
+        width: 80px;
+        height: 10px;
+        background-color: #000;
+        position: absolute;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game">
+      <div id="player"></div>
+    </div>
+
+    <script>
+      // Game variables
+      const gameDiv = document.getElementById("game");
+      const player = document.getElementById("player");
+
+      let platforms = [];
+      let platformSpeed = 2;
+      let playerJumpHeight = 200;
+      let isJumping = false;
+      let gravity = 1;
+      let isGameOver = false;
+
+      // Move player left or right
+      // Move player left or right
+      function movePlayer(event) {
+        if (!isGameOver) {
+          const key = event.key;
+          const playerLeft = parseInt(
+            window.getComputedStyle(player).getPropertyValue("left")
+          );
+      
+          if (key === "ArrowLeft" && playerLeft > 0) {
+            player.style.left = playerLeft - 10 + "px";
+          } else if (
+            key === "ArrowRight" &&
+            playerLeft < gameDiv.offsetWidth - player.offsetWidth
+          ) {
+            player.style.left = playerLeft + 10 + "px";
+          }
+        }
+      }
+      
+
+      // Player jump
+      // Player jump
+      function jumpPlayer(event) {
+        if (!isJumping && !isGameOver && event.key === " ") {
+          isJumping = true;
+          let jumpCount = 0;
+      
+          let jumpInterval = setInterval(() => {
+            const playerBottom = parseInt(
+              window.getComputedStyle(player).getPropertyValue("bottom")
+            );
+      
+            if (jumpCount >= playerJumpHeight) {
+              clearInterval(jumpInterval);
+              isJumping = false;
+            } else {
+              player.style.bottom = playerBottom + 10 + "px";
+              jumpCount += 10;
+            }
+      
+            if (jumpCount === playerJumpHeight - 10) {
+              // Start descending after reaching the peak of the jump
+              descendPlayer();
+            }
+          }, 20);
+        }
+      }
+      
+      // Descend player after jump
+      function descendPlayer() {
+        let descendCount = 0;
+      
+        let descendInterval = setInterval(() => {
+          const playerBottom = parseInt(
+            window.getComputedStyle(player).getPropertyValue("bottom")
+          );
+      
+          if (descendCount >= playerJumpHeight) {
+            clearInterval(descendInterval);
+          } else {
+            player.style.bottom = playerBottom - 10 + "px";
+            descendCount += 10;
+          }
+        }, 20);
+      }
+
+
+      // Create a new platform
+      // Create a new platform
+      // Maximum number of platforms on the screen
+      const maxPlatforms = 4;
+      
+      // Create a new platform
+      function createPlatform() {
+        if (platforms.length < maxPlatforms) {
+          const platform = document.createElement("div");
+          platform.classList.add("platform");
+          platform.style.left = Math.random() * (gameDiv.offsetWidth - 80) + "px";
+      
+          // Add a random y-offset to the initial position
+          const yOffset = Math.random() * 150; // Adjust the maximum offset as desired
+          platform.style.top = `-${yOffset}px`;
+      
+          gameDiv.appendChild(platform);
+          platforms.push(platform);
+        }
+      }
+      
+      // Move platforms down
+      function movePlatforms() {
+        platforms.forEach((platform, index) => {
+          const platformTop = parseInt(
+            window.getComputedStyle(platform).getPropertyValue("top")
+          );
+      
+          if (platformTop >= gameDiv.offsetHeight - platform.offsetHeight) {
+            platforms.splice(index, 1);
+            platform.remove();
+          } else {
+            platform.style.top = platformTop + platformSpeed + "px";
+          }
+        });
+      
+        // Ensure there are always four platforms on the screen
+        while (platforms.length < maxPlatforms) {
+          createPlatform();
+        }
+      }
+
+
+      // Check for collisions
+      function checkCollisions() {
+        const playerRect = player.getBoundingClientRect();
+        platforms.forEach((platform) => {
+          const platformRect = platform.getBoundingClientRect();
+
+          if (
+            playerRect.bottom >= platformRect.top &&
+            playerRect.bottom <= platformRect.bottom &&
+            playerRect.right >= platformRect.left &&
+            playerRect.left <= platformRect.right
+          ) {
+            isJumping = false;
+          }
+        });
+
+        const gameRect = gameDiv.getBoundingClientRect();
+        if (playerRect.bottom >= gameRect.bottom) {
+          gameOver();
+        }
+      }
+
+      // Game over
+      function gameOver() {
+        isGameOver = true;
+        alert("Game Over!");
+        location.reload();
+      }
+
+      // Game loop
+      // Game loop
+    function gameLoop() {
+      if (!isGameOver) {
+        // Generate platforms at a limited rate
+        if (Math.random() < 0.1) {
+          createPlatform();
+        }
+    
+        movePlatforms();
+        checkCollisions();
+        requestAnimationFrame(gameLoop);
+      }
+    }
+    
+
+      // Event listeners
+      document.addEventListener("keydown", movePlayer);
+      document.addEventListener("keydown", jumpPlayer);
+
+      // Start the game
+      gameLoop();
+    </script>
+  </body>
+</html>
